@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://snapmock-orpin.vercel.app"),
   title: "SnapMock - Beautiful Screenshot Mockups in Seconds",
   description:
     "Create stunning screenshot mockups with beautiful gradient backgrounds, shadows, and device frames. Free online tool for developers, marketers, and content creators. No sign-up required.",

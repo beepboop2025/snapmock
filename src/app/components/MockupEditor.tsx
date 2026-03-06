@@ -64,7 +64,8 @@ function PhoneFrame({ children, shadow }: { children: React.ReactNode; shadow: s
 export default function MockupEditor() {
   const { isPro } = useLicense();
   const [image, setImage] = useState<string | null>(null);
-  const [bgIndex, setBgIndex] = useState(0);
+  const [bgIndex, setBgIndex] = useState(0); // -1 = custom color
+  const [customColor, setCustomColor] = useState("#7c3aed");
   const [padding, setPadding] = useState(64);
   const [borderRadius, setBorderRadius] = useState(12);
   const [shadowIndex, setShadowIndex] = useState(2);
@@ -130,7 +131,7 @@ export default function MockupEditor() {
       link.click();
       track("export_png", {
         frame,
-        background: BACKGROUNDS[bgIndex].name,
+        background: bgIndex === -1 ? "custom" : BACKGROUNDS[bgIndex].name,
         isPro: isPro ? "yes" : "no",
         resolution: isPro ? "4x" : "2x",
       });
@@ -141,9 +142,11 @@ export default function MockupEditor() {
     }
   };
 
-  const bg = BACKGROUNDS[bgIndex];
+  const bg = bgIndex === -1 ? { name: "Custom", css: customColor } : BACKGROUNDS[bgIndex];
   const shadow = SHADOWS[shadowIndex];
-  const isDarkBg = [6, 11].includes(bgIndex);
+  const isDarkBg = bgIndex === -1
+    ? (() => { const c = customColor.replace("#", ""); const r = parseInt(c.substring(0, 2), 16); const g = parseInt(c.substring(2, 4), 16); const b = parseInt(c.substring(4, 6), 16); return (r * 299 + g * 587 + b * 114) / 1000 < 128; })()
+    : [6, 11].includes(bgIndex);
 
   const renderContent = () => {
     if (!image) return null;
@@ -245,6 +248,35 @@ export default function MockupEditor() {
               />
             ))}
           </div>
+          {/* Custom Color Picker — Pro only */}
+          {isPro ? (
+            <div className="mt-3 flex items-center gap-2">
+              <label
+                htmlFor="custom-color-input"
+                className={`w-8 h-8 rounded-lg border-2 transition-all shrink-0 cursor-pointer ${bgIndex === -1 ? "border-violet-500 ring-2 ring-violet-200 scale-110" : "border-gray-200 hover:border-gray-400"}`}
+                style={{ background: customColor }}
+                title="Pick a custom color"
+              />
+              <input
+                type="color"
+                value={customColor}
+                onChange={(e) => { setCustomColor(e.target.value); setBgIndex(-1); }}
+                className="w-0 h-0 opacity-0 absolute"
+                id="custom-color-input"
+              />
+              <label
+                htmlFor="custom-color-input"
+                className="text-xs text-violet-600 font-medium cursor-pointer hover:text-violet-800 transition-colors"
+              >
+                Custom color
+              </label>
+              <span className="text-xs text-gray-400 font-mono ml-auto">{customColor}</span>
+            </div>
+          ) : (
+            <p className="mt-2 text-xs text-gray-400">
+              <a href="#pricing" className="text-violet-500 hover:text-violet-700">Pro</a> unlocks custom color backgrounds
+            </p>
+          )}
         </div>
 
         {/* Padding */}
