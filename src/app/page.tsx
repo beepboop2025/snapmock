@@ -195,7 +195,7 @@ export default function Home() {
               },
               {
                 q: "How does the Pro license work?",
-                a: "It\u2019s a one-time $9 payment via Buy Me a Coffee. You get a license key that activates Pro features in your browser. No subscription, no recurring charges. One key works on all your devices.",
+                a: "It\u2019s a one-time $9 payment through any of our supported payment methods (UPI, PayPal, and more). After payment, enter any text to activate Pro features in your browser. No subscription, no recurring charges.",
               },
             ].map((faq, i) => (
               <div key={i} className="bg-white p-6 rounded-xl border border-gray-100">
