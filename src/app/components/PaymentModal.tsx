@@ -20,15 +20,23 @@ export default function PaymentModal({ isOpen, onClose, mode }: PaymentModalProp
   const [licenseKey, setLicenseKey] = useState("");
   const [keyError, setKeyError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [selectedWalletIndex, setSelectedWalletIndex] = useState(0);
 
   if (!isOpen) return null;
 
   // Determine which payment methods are available
+  const hasCrypto = (CONFIG.CRYPTO_WALLETS && CONFIG.CRYPTO_WALLETS.length > 0) || !!CONFIG.CRYPTO_ADDRESS;
+  const cryptoLabel = CONFIG.CRYPTO_WALLETS?.length > 1
+    ? `Crypto (${CONFIG.CRYPTO_WALLETS.length} networks)`
+    : CONFIG.CRYPTO_WALLETS?.length === 1
+      ? `Crypto (${CONFIG.CRYPTO_WALLETS[0].network})`
+      : CONFIG.CRYPTO_NETWORK ? `Crypto (${CONFIG.CRYPTO_NETWORK})` : "Crypto";
+
   const methods: { id: PaymentMethod; name: string; icon: string; available: boolean }[] = [
     { id: "upi", name: "UPI (GPay / PhonePe)", icon: "💳", available: !!CONFIG.UPI_ID },
     { id: "paypal", name: "PayPal", icon: "🅿️", available: !!CONFIG.PAYPAL_USERNAME },
     { id: "bmac", name: "Buy Me a Coffee", icon: "☕", available: !!CONFIG.BMAC_USERNAME },
-    { id: "crypto", name: `Crypto${CONFIG.CRYPTO_NETWORK ? ` (${CONFIG.CRYPTO_NETWORK})` : ""}`, icon: "🪙", available: !!CONFIG.CRYPTO_ADDRESS },
+    { id: "crypto", name: cryptoLabel, icon: "🪙", available: hasCrypto },
   ];
 
   const availableMethods = methods.filter((m) => m.available);
@@ -133,23 +141,57 @@ export default function PaymentModal({ isOpen, onClose, mode }: PaymentModalProp
           </div>
         );
 
-      case "crypto":
+      case "crypto": {
+        const wallets = CONFIG.CRYPTO_WALLETS?.length
+          ? CONFIG.CRYPTO_WALLETS
+          : CONFIG.CRYPTO_ADDRESS
+            ? [{ network: CONFIG.CRYPTO_NETWORK || "Crypto", address: CONFIG.CRYPTO_ADDRESS, icon: "🪙" }]
+            : [];
+        const activeWallet = wallets[selectedWalletIndex] || wallets[0];
+        if (!activeWallet) return null;
+
         return (
           <div className="space-y-4">
             <p className="text-sm text-gray-500 text-center">
-              Send {amount} to the address below{CONFIG.CRYPTO_NETWORK ? ` on ${CONFIG.CRYPTO_NETWORK}` : ""}
+              Send {amount} to the address below
             </p>
+            {/* Network selector — only show when multiple wallets */}
+            {wallets.length > 1 && (
+              <div className="flex flex-wrap gap-1.5">
+                {wallets.map((w, i) => (
+                  <button
+                    key={w.network}
+                    onClick={() => { setSelectedWalletIndex(i); setCopied(false); }}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${
+                      i === selectedWalletIndex
+                        ? "border-violet-500 bg-violet-50 text-violet-700"
+                        : "border-gray-200 hover:border-gray-400 text-gray-600"
+                    }`}
+                  >
+                    {w.icon} {w.network}
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* Selected network label */}
+            <div className="text-center">
+              <span className="inline-block px-3 py-1 bg-gray-100 rounded-full text-xs font-semibold text-gray-700">
+                {activeWallet.icon} {activeWallet.network}
+              </span>
+            </div>
+            {/* Address */}
             <div className="bg-gray-50 rounded-lg px-4 py-3">
-              <p className="text-xs font-mono text-gray-600 break-all text-center">{CONFIG.CRYPTO_ADDRESS}</p>
+              <p className="text-xs font-mono text-gray-600 break-all text-center">{activeWallet.address}</p>
             </div>
             <button
-              onClick={() => handleCopy(CONFIG.CRYPTO_ADDRESS)}
+              onClick={() => { handleCopy(activeWallet.address); track("crypto_copy", { network: activeWallet.network }); }}
               className="w-full py-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl transition-colors"
             >
               {copied ? "✓ Address Copied!" : "Copy Wallet Address"}
             </button>
           </div>
         );
+      }
 
       default:
         return null;
