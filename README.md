@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SnapMock
+
+**Turn screenshots into beautiful mockups in seconds.**
+
+Upload any screenshot, pick a gradient background, add a browser or phone frame, and download a polished PNG. Everything runs in your browser — your images never leave your device.
+
+## Features
+
+- 12+ gradient backgrounds
+- Browser window & phone device frames
+- Adjustable padding, shadows, and corner radius
+- High-resolution PNG export (2x free, 4x Pro)
+- Clipboard paste support (Ctrl+V)
+- Drag & drop upload
+- 100% client-side — zero server uploads
+- No sign-up required
+- Built-in multi-method payment system (UPI, PayPal, BMAC, Crypto)
+- Freemium model with Pro license activation
+
+## Tech Stack
+
+- **Next.js 16** (App Router) + TypeScript
+- **Tailwind CSS v4**
+- **html-to-image** for client-side PNG export
+- **Vercel Analytics** + Speed Insights
+- Deployed on **Vercel**
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+git clone https://github.com/YOUR_USERNAME/snapmock.git
+cd snapmock
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Configuration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Edit `src/app/config.ts` to connect your payment methods:
 
-## Learn More
+```ts
+export const CONFIG = {
+  UPI_ID: "",           // Your UPI ID (Google Pay / PhonePe)
+  PAYPAL_USERNAME: "",  // PayPal.me username
+  BMAC_USERNAME: "",    // Buy Me a Coffee username
+  CRYPTO_ADDRESS: "",   // Wallet address
+  EMAIL_ENDPOINT: "",   // Email capture form endpoint
+  // ...
+};
+```
 
-To learn more about Next.js, take a look at the following resources:
+The app auto-detects configured methods and displays them in the payment modal.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run build
+npx vercel --yes --prod
+```
 
-## Deploy on Vercel
+## Project Structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+src/app/
+  config.ts              # Payment & site configuration
+  page.tsx               # Landing page
+  layout.tsx             # Root layout + SEO
+  components/
+    MockupEditor.tsx     # Core editor (canvas + controls)
+    PricingSection.tsx   # Free / Pro pricing
+    PaymentModal.tsx     # Multi-method payment modal
+    FloatingSupport.tsx  # Floating tip button
+    EmailCapture.tsx     # Email capture form
+  hooks/
+    useLicense.ts        # Pro license management
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## License
+
+MIT
