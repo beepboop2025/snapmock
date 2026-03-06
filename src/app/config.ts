@@ -22,10 +22,20 @@ export const CONFIG = {
   // Note: BMAC requires connecting Stripe/PayPal before you can receive payments
   BMAC_USERNAME: "", // e.g. "snapmock" → becomes buymeacoffee.com/snapmock
 
-  // Crypto wallet — create free wallet via MetaMask or Coinbase Wallet
+  // Crypto wallets — add as many networks as you support
   // No financial info needed. Convert to fiat when you want.
-  CRYPTO_ADDRESS: "", // e.g. "0x1234...abcd" (ETH/USDC/Polygon address)
-  CRYPTO_NETWORK: "", // e.g. "Ethereum", "Polygon", "Base"
+  CRYPTO_WALLETS: [
+    { network: "Ethereum", address: "0x84a8c2281F053b8671253f1fBa80a76E68299793", icon: "⟠" },
+    { network: "Bitcoin", address: "bc1qesqcn0z2r7465945gmgr6v5jr3zqt5035cmze0", icon: "₿" },
+    { network: "Solana", address: "BHauLSfgsYoXRDbeRUXrZHABXP29NA9DrUfajQ6jsKRW", icon: "◎" },
+    { network: "BNB Chain", address: "0x84a8c2281F053b8671253f1fBa80a76E68299793", icon: "🔶" },
+    { network: "Base", address: "0x84a8c2281F053b8671253f1fBa80a76E68299793", icon: "🔵" },
+    { network: "Polygon", address: "0x84a8c2281F053b8671253f1fBa80a76E68299793", icon: "⬡" },
+  ] as { network: string; address: string; icon: string }[],
+
+  // Legacy single-wallet fields (kept for backward compatibility)
+  CRYPTO_ADDRESS: "", // leave empty when using CRYPTO_WALLETS above
+  CRYPTO_NETWORK: "",
 
   // ── Email Capture ──────────────────────────
   EMAIL_ENDPOINT: "", // e.g. "https://formspree.io/f/xyzabc"
