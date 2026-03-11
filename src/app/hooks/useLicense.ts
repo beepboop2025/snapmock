@@ -11,10 +11,20 @@ const SYNC_EVENT = "snapmock-license-change";
  * When one component activates a license, all others update instantly.
  */
 export function useLicense() {
+  const [mounted, setMounted] = useState(false);
   const [isPro, setIsPro] = useState(false);
 
   useEffect(() => {
-    const check = () => setIsPro(!!localStorage.getItem(STORAGE_KEY));
+    setMounted(true);
+
+    const check = () => {
+      try {
+        setIsPro(!!localStorage.getItem(STORAGE_KEY));
+      } catch {
+        // localStorage unavailable (e.g., private browsing mode)
+        setIsPro(false);
+      }
+    };
     check();
 
     // Sync across components in the same tab
@@ -31,7 +41,12 @@ export function useLicense() {
   const activate = useCallback((key: string): boolean => {
     const trimmed = key.trim();
     if (trimmed.length >= 8) {
-      localStorage.setItem(STORAGE_KEY, trimmed);
+      try {
+        localStorage.setItem(STORAGE_KEY, trimmed);
+      } catch {
+        // localStorage unavailable or quota exceeded
+        return false;
+      }
       window.dispatchEvent(new Event(SYNC_EVENT));
       return true;
     }
@@ -39,9 +54,14 @@ export function useLicense() {
   }, []);
 
   const deactivate = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // localStorage unavailable
+    }
     window.dispatchEvent(new Event(SYNC_EVENT));
   }, []);
 
-  return { isPro, activate, deactivate };
+  // Only return isPro=true after client-side mount to prevent hydration mismatch
+  return { isPro: mounted && isPro, activate, deactivate };
 }

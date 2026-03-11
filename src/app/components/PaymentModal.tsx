@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { track } from "@vercel/analytics";
 import { useLicense } from "../hooks/useLicense";
 import { CONFIG } from "../config";
@@ -19,8 +19,20 @@ export default function PaymentModal({ isOpen, onClose, mode }: PaymentModalProp
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
   const [licenseKey, setLicenseKey] = useState("");
   const [keyError, setKeyError] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState("");
   const [selectedWalletIndex, setSelectedWalletIndex] = useState(0);
+
+  // Reset all internal state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setStep("pay");
+      setSelectedMethod(null);
+      setLicenseKey("");
+      setKeyError("");
+      setCopied("");
+      setSelectedWalletIndex(0);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -33,17 +45,17 @@ export default function PaymentModal({ isOpen, onClose, mode }: PaymentModalProp
       : CONFIG.CRYPTO_NETWORK ? `Crypto (${CONFIG.CRYPTO_NETWORK})` : "Crypto";
 
   const methods: { id: PaymentMethod; name: string; icon: string; available: boolean }[] = [
-    { id: "upi", name: "UPI (GPay / PhonePe)", icon: "💳", available: !!CONFIG.UPI_ID },
-    { id: "paypal", name: "PayPal", icon: "🅿️", available: !!CONFIG.PAYPAL_USERNAME },
-    { id: "bmac", name: "Buy Me a Coffee", icon: "☕", available: !!CONFIG.BMAC_USERNAME },
-    { id: "crypto", name: cryptoLabel, icon: "🪙", available: hasCrypto },
+    { id: "upi", name: "UPI (GPay / PhonePe)", icon: "\uD83D\uDCB3", available: !!CONFIG.UPI_ID },
+    { id: "paypal", name: "PayPal", icon: "\uD83C\uDD7F\uFE0F", available: !!CONFIG.PAYPAL_USERNAME },
+    { id: "bmac", name: "Buy Me a Coffee", icon: "\u2615", available: !!CONFIG.BMAC_USERNAME },
+    { id: "crypto", name: cryptoLabel, icon: "\uD83E\uDE99", available: hasCrypto },
   ];
 
   const availableMethods = methods.filter((m) => m.available);
   const hasAnyMethod = availableMethods.length > 0;
 
   const amount = mode === "pro" ? CONFIG.PRO_PRICE : "any amount";
-  const amountINR = mode === "pro" && CONFIG.PRO_PRICE_INR ? `₹${CONFIG.PRO_PRICE_INR}` : null;
+  const amountINR = mode === "pro" && CONFIG.PRO_PRICE_INR ? `\u20B9${CONFIG.PRO_PRICE_INR}` : null;
 
   const upiDeepLink = CONFIG.UPI_ID
     ? `upi://pay?pa=${encodeURIComponent(CONFIG.UPI_ID)}&pn=${encodeURIComponent(CONFIG.UPI_NAME || CONFIG.PRODUCT_NAME)}${mode === "pro" ? `&am=${CONFIG.PRO_PRICE_INR || "749"}&cu=INR` : "&cu=INR"}&tn=${encodeURIComponent(mode === "pro" ? "SnapMock Pro License" : "Support SnapMock")}`
@@ -53,10 +65,14 @@ export default function PaymentModal({ isOpen, onClose, mode }: PaymentModalProp
     ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiDeepLink)}`
     : "";
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(text);
+      setTimeout(() => setCopied(""), 2000);
+    } catch (err) {
+      console.error("Failed to copy to clipboard:", err);
+    }
   };
 
   const handleActivate = () => {
@@ -87,21 +103,33 @@ export default function PaymentModal({ isOpen, onClose, mode }: PaymentModalProp
     switch (selectedMethod) {
       case "upi":
         return (
-          <div className="space-y-4">
-            <div className="bg-gray-50 rounded-xl p-4 text-center">
+          <div className="space-y-4 fade-slide-in">
+            <div className="bg-white/[0.03] rounded-xl p-4 text-center border border-white/[0.06]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={upiQrUrl} alt="UPI QR Code" className="mx-auto rounded-lg" width={200} height={200} />
-              <p className="text-xs text-gray-400 mt-2">Scan with any UPI app</p>
+              <p className="text-xs text-white/30 mt-2">Scan with any UPI app</p>
             </div>
-            <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-4 py-3">
-              <span className="text-sm text-gray-600 flex-1 font-mono truncate">{CONFIG.UPI_ID}</span>
-              <button onClick={() => handleCopy(CONFIG.UPI_ID)} className="text-xs font-semibold text-violet-600 hover:text-violet-800 shrink-0">
-                {copied ? "Copied!" : "Copy"}
+            <div className="flex items-center gap-2 bg-white/[0.03] border border-white/[0.06] rounded-lg px-4 py-3">
+              <span className="text-sm text-white/50 flex-1 font-mono truncate">{CONFIG.UPI_ID}</span>
+              <button
+                onClick={() => handleCopy(CONFIG.UPI_ID)}
+                className={`text-xs font-semibold shrink-0 transition-all duration-300 px-2.5 py-1 rounded-md ${
+                  copied === CONFIG.UPI_ID
+                    ? "text-emerald-400 bg-emerald-500/10"
+                    : "text-violet-400 hover:text-violet-300 hover:bg-violet-500/10"
+                }`}
+              >
+                {copied === CONFIG.UPI_ID ? (
+                  <span className="flex items-center gap-1">
+                    <svg className="w-3.5 h-3.5 check-animate" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    Copied!
+                  </span>
+                ) : "Copy"}
               </button>
             </div>
             <a
               href={upiDeepLink}
-              className="block w-full text-center py-3 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl transition-colors"
+              className="block w-full text-center py-3 bg-gradient-to-r from-violet-600 to-fuchsia-500 hover:from-violet-500 hover:to-fuchsia-400 text-white font-semibold rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-violet-500/20 hover:scale-[1.01] active:scale-[0.99]"
               onClick={() => track("upi_deeplink_click")}
             >
               Pay {amountINR || amount} via UPI App
@@ -111,13 +139,13 @@ export default function PaymentModal({ isOpen, onClose, mode }: PaymentModalProp
 
       case "paypal":
         return (
-          <div className="space-y-4">
-            <p className="text-sm text-gray-500 text-center">Click below to open PayPal and send {amount}</p>
+          <div className="space-y-4 fade-slide-in">
+            <p className="text-sm text-white/40 text-center">Click below to open PayPal and send {amount}</p>
             <a
               href={`https://paypal.me/${CONFIG.PAYPAL_USERNAME}${mode === "pro" ? "/9" : ""}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full text-center py-3 bg-[#0070BA] hover:bg-[#005C9A] text-white font-semibold rounded-xl transition-colors"
+              className="block w-full text-center py-3 bg-[#0070BA] hover:bg-[#005C9A] text-white font-semibold rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-[#0070BA]/20 hover:scale-[1.01] active:scale-[0.99]"
               onClick={() => track("paypal_click")}
             >
               Pay with PayPal
@@ -127,16 +155,16 @@ export default function PaymentModal({ isOpen, onClose, mode }: PaymentModalProp
 
       case "bmac":
         return (
-          <div className="space-y-4">
-            <p className="text-sm text-gray-500 text-center">Support via Buy Me a Coffee</p>
+          <div className="space-y-4 fade-slide-in">
+            <p className="text-sm text-white/40 text-center">Support via Buy Me a Coffee</p>
             <a
               href={`https://buymeacoffee.com/${CONFIG.BMAC_USERNAME}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full text-center py-3 bg-[#FFDD00] hover:bg-[#FFD000] text-gray-900 font-semibold rounded-xl transition-colors"
+              className="block w-full text-center py-3 bg-[#FFDD00] hover:bg-[#FFD000] text-gray-900 font-semibold rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-[#FFDD00]/20 hover:scale-[1.01] active:scale-[0.99]"
               onClick={() => track("bmac_click")}
             >
-              ☕ Buy Me a Coffee
+              Buy Me a Coffee
             </a>
           </div>
         );
@@ -145,27 +173,27 @@ export default function PaymentModal({ isOpen, onClose, mode }: PaymentModalProp
         const wallets = CONFIG.CRYPTO_WALLETS?.length
           ? CONFIG.CRYPTO_WALLETS
           : CONFIG.CRYPTO_ADDRESS
-            ? [{ network: CONFIG.CRYPTO_NETWORK || "Crypto", address: CONFIG.CRYPTO_ADDRESS, icon: "🪙" }]
+            ? [{ network: CONFIG.CRYPTO_NETWORK || "Crypto", address: CONFIG.CRYPTO_ADDRESS, icon: "\uD83E\uDE99" }]
             : [];
         const activeWallet = wallets[selectedWalletIndex] || wallets[0];
         if (!activeWallet) return null;
 
         return (
-          <div className="space-y-4">
-            <p className="text-sm text-gray-500 text-center">
+          <div className="space-y-4 fade-slide-in">
+            <p className="text-sm text-white/40 text-center">
               Send {amount} to the address below
             </p>
-            {/* Network selector — only show when multiple wallets */}
+            {/* Network selector -- only show when multiple wallets */}
             {wallets.length > 1 && (
               <div className="flex flex-wrap gap-1.5">
                 {wallets.map((w, i) => (
                   <button
                     key={w.network}
-                    onClick={() => { setSelectedWalletIndex(i); setCopied(false); }}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${
+                    onClick={() => { setSelectedWalletIndex(i); setCopied(""); }}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-300 ${
                       i === selectedWalletIndex
-                        ? "border-violet-500 bg-violet-50 text-violet-700"
-                        : "border-gray-200 hover:border-gray-400 text-gray-600"
+                        ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
+                        : "border border-white/8 hover:border-white/15 text-white/40 hover:text-white/60 hover:bg-white/[0.03]"
                     }`}
                   >
                     {w.icon} {w.network}
@@ -175,19 +203,28 @@ export default function PaymentModal({ isOpen, onClose, mode }: PaymentModalProp
             )}
             {/* Selected network label */}
             <div className="text-center">
-              <span className="inline-block px-3 py-1 bg-gray-100 rounded-full text-xs font-semibold text-gray-700">
+              <span className="inline-block px-3 py-1 bg-white/[0.05] border border-white/[0.06] rounded-full text-xs font-semibold text-white/60">
                 {activeWallet.icon} {activeWallet.network}
               </span>
             </div>
             {/* Address */}
-            <div className="bg-gray-50 rounded-lg px-4 py-3">
-              <p className="text-xs font-mono text-gray-600 break-all text-center">{activeWallet.address}</p>
+            <div className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-4 py-3">
+              <p className="text-xs font-mono text-white/50 break-all text-center">{activeWallet.address}</p>
             </div>
             <button
               onClick={() => { handleCopy(activeWallet.address); track("crypto_copy", { network: activeWallet.network }); }}
-              className="w-full py-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl transition-colors"
+              className={`w-full py-3 font-semibold rounded-xl transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] ${
+                copied === activeWallet.address
+                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                  : "bg-white/10 hover:bg-white/15 text-white border border-white/10"
+              }`}
             >
-              {copied ? "✓ Address Copied!" : "Copy Wallet Address"}
+              {copied === activeWallet.address ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="w-4 h-4 check-animate" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  Address Copied!
+                </span>
+              ) : "Copy Wallet Address"}
             </button>
           </div>
         );
@@ -201,24 +238,29 @@ export default function PaymentModal({ isOpen, onClose, mode }: PaymentModalProp
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={onClose}>
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-lg modal-backdrop-in" />
 
       {/* Modal */}
       <div
-        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+        className="relative glass-strong rounded-2xl shadow-2xl shadow-black/50 w-full max-w-md max-h-[90vh] overflow-y-auto modal-slide-up noise-overlay"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h3 className="text-lg font-bold text-gray-900">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
+          <h3 className="text-lg font-bold text-white">
             {step === "activate"
               ? "Activate Pro"
               : mode === "pro"
-                ? `Get Pro — ${amount}`
+                ? `Get Pro \u2014 ${amount}`
                 : "Support SnapMock"}
           </h3>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
-            ✕
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-white/30 hover:text-white/70 hover:bg-white/[0.06] transition-all duration-300 hover:rotate-90"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
@@ -226,10 +268,15 @@ export default function PaymentModal({ isOpen, onClose, mode }: PaymentModalProp
         <div className="px-6 py-5">
           {step === "activate" ? (
             /* License activation step */
-            <div className="space-y-4">
-              <div className="bg-green-50 text-green-800 rounded-xl p-4 text-center">
+            <div className="space-y-4 fade-slide-in">
+              <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 rounded-xl p-4 text-center">
+                <div className="w-10 h-10 mx-auto mb-2 bg-emerald-500/15 rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 check-animate" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
                 <p className="font-semibold">Thank you for your payment!</p>
-                <p className="text-sm mt-1">Enter any text (8+ characters) to activate Pro.</p>
+                <p className="text-sm mt-1 text-emerald-400/60">Enter any text (8+ characters) to activate Pro.</p>
               </div>
               <div className="flex gap-2">
                 <input
@@ -237,50 +284,58 @@ export default function PaymentModal({ isOpen, onClose, mode }: PaymentModalProp
                   value={licenseKey}
                   onChange={(e) => { setLicenseKey(e.target.value); setKeyError(""); }}
                   placeholder="Enter your name, email, or transaction ID..."
-                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                  className="flex-1 px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-lg text-sm text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/30 transition-all duration-300"
                   onKeyDown={(e) => e.key === "Enter" && handleActivate()}
                 />
-                <button onClick={handleActivate} className="px-5 py-2.5 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-700 transition-colors">
+                <button
+                  onClick={handleActivate}
+                  className="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-fuchsia-500 hover:from-violet-500 hover:to-fuchsia-400 text-white text-sm font-semibold rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-violet-500/20"
+                >
                   Activate
                 </button>
               </div>
-              {keyError && <p className="text-red-500 text-xs">{keyError}</p>}
+              {keyError && <p className="text-red-400 text-xs fade-slide-in">{keyError}</p>}
             </div>
           ) : !hasAnyMethod ? (
             /* No payment methods configured */
-            <div className="text-center py-6">
-              <p className="text-gray-500">Payment methods are being set up.</p>
-              <p className="text-sm text-gray-400 mt-2">Check back soon!</p>
+            <div className="text-center py-6 fade-slide-in">
+              <p className="text-white/50">Payment methods are being set up.</p>
+              <p className="text-sm text-white/25 mt-2">Check back soon!</p>
             </div>
           ) : selectedMethod ? (
             /* Show selected method details */
             <div className="space-y-4">
-              <button onClick={() => setSelectedMethod(null)} className="text-sm text-violet-600 hover:text-violet-800 font-medium flex items-center gap-1">
-                ← All payment methods
+              <button
+                onClick={() => setSelectedMethod(null)}
+                className="text-sm text-violet-400 hover:text-violet-300 font-medium flex items-center gap-1 transition-colors duration-300 hover:bg-violet-500/5 px-2 py-1 rounded-md -ml-2"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                All payment methods
               </button>
               {renderMethodDetails()}
               {mode === "pro" && (
                 <button
                   onClick={handlePaid}
-                  className="w-full py-2.5 border border-gray-200 text-gray-600 hover:text-gray-800 hover:border-gray-400 text-sm font-medium rounded-xl transition-colors mt-2"
+                  className="w-full py-2.5 border border-white/8 text-white/40 hover:text-white/70 hover:border-white/15 hover:bg-white/[0.03] text-sm font-medium rounded-xl transition-all duration-300 mt-2"
                 >
-                  I&apos;ve completed the payment →
+                  I&apos;ve completed the payment &rarr;
                 </button>
               )}
             </div>
           ) : (
             /* Payment method selection */
-            <div className="space-y-3">
-              <p className="text-sm text-gray-500 mb-4">Choose your preferred payment method:</p>
-              {availableMethods.map((method) => (
+            <div className="space-y-3 fade-slide-in">
+              <p className="text-sm text-white/35 mb-4">Choose your preferred payment method:</p>
+              {availableMethods.map((method, idx) => (
                 <button
                   key={method.id}
                   onClick={() => { setSelectedMethod(method.id); track("payment_method_selected", { method: method.id }); }}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 border border-gray-200 rounded-xl hover:border-violet-300 hover:bg-violet-50 transition-all text-left group"
+                  className="stagger-item w-full flex items-center gap-3 px-4 py-3.5 border border-white/[0.06] rounded-xl hover:border-violet-500/25 hover:bg-violet-500/[0.06] transition-all duration-300 text-left group hover:scale-[1.015] active:scale-[0.99] hover:shadow-lg hover:shadow-violet-500/5"
+                  style={{ animationDelay: `${idx * 70}ms` }}
                 >
-                  <span className="text-2xl">{method.icon}</span>
-                  <span className="font-medium text-gray-700 group-hover:text-violet-700">{method.name}</span>
-                  <span className="ml-auto text-gray-300 group-hover:text-violet-400">→</span>
+                  <span className="text-2xl transition-transform duration-300 group-hover:scale-110">{method.icon}</span>
+                  <span className="font-medium text-white/60 group-hover:text-violet-300 transition-colors duration-300">{method.name}</span>
+                  <span className="ml-auto text-white/15 group-hover:text-violet-400 transition-all duration-300 group-hover:translate-x-1">&rarr;</span>
                 </button>
               ))}
             </div>
