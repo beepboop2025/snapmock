@@ -1,140 +1,132 @@
 # SnapMock
 
-**Turn screenshots into beautiful mockups instantly. Free, private, no sign-up.**
+**Screenshot mockup generator. Upload, frame, export -- all in the browser.**
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black.svg)
 ![React](https://img.shields.io/badge/React-19-blue.svg)
-![Tailwind](https://img.shields.io/badge/Tailwind-4-38bdf8.svg)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38bdf8.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
-
-<!-- Add screenshot or demo GIF here -->
-> Replace this with a GIF showing: drag screenshot in, pick gradient, add browser frame, download mockup
 
 ---
 
-Upload a screenshot. Pick a gradient. Add a device frame. Download a polished PNG. **Everything runs in your browser — your images never leave your device.**
+SnapMock turns raw screenshots into polished device mockups in seconds. Drag in an image, pick a background gradient, wrap it in a device frame, and download a high-resolution PNG. Everything runs client-side -- your images never leave your machine.
 
-[**Try it live**](https://snapmock-orpin.vercel.app)
+[Live Demo](https://snapmock-orpin.vercel.app)
 
 ---
 
 ## Features
 
-| | Feature | Description |
-|---|---------|-------------|
-| :art: | **12 Gradient Backgrounds** | Lavender, Ocean, Sunset, Peach, Mint, Berry, Night, Coral, Sky, Gold, White, Dark |
-| :computer: | **Device Frames** | Browser window (macOS-style), phone (with notch), or no frame |
-| :cloud: | **3 Upload Methods** | Drag & drop, click to browse, or paste from clipboard (Ctrl+V) |
-| :sparkles: | **Customization** | Adjustable padding, border radius, 4 shadow levels |
-| :lock: | **100% Private** | Client-side processing — zero server uploads |
-| :zap: | **Instant** | No accounts, no loading spinners, no waterfall of modals |
-
-### Free vs Pro
-
-| | Free | Pro ($9 one-time) |
-|---|------|-----------|
-| Mockups | Unlimited | Unlimited |
-| Backgrounds & Frames | All | All |
-| Export Resolution | 2x PNG | 4x PNG |
-| Custom Colors | No | Yes |
-| Watermark | Yes | No |
-
----
-
-## Quick Start
-
-```bash
-git clone https://github.com/beepboop2025/snapmock.git
-cd snapmock
-npm install
-npm run dev
-```
-
-Opens at `http://localhost:3000`. That's it.
-
----
-
-## How It Works
-
-```mermaid
-graph LR
-    A[Upload Image] -->|FileReader| B[Base64 Data URL]
-    B --> C[Styled Container]
-    C -->|Gradient + Frame + Shadow| D[Preview]
-    D -->|html-to-image| E[Canvas Render]
-    E -->|Download API| F[PNG File]
-```
-
-1. Image loaded into memory as base64 (never leaves the browser)
-2. Rendered in a styled container with your chosen gradient, frame, and effects
-3. `html-to-image` renders the DOM element to a PNG canvas at 2x/4x resolution
-4. Browser download API saves the file
-
-**No server. No upload. No tracking.** Just `FileReader` → `canvas` → `download`.
+- **Drag-and-drop upload** -- Drop an image, click to browse, or paste from clipboard with Ctrl+V.
+- **12 gradient backgrounds** -- Lavender, Ocean, Sunset, Peach, Mint, Berry, Night, Coral, Sky, Gold, White, and Dark.
+- **Device frames** -- macOS-style browser window, phone with notch, or no frame.
+- **Adjustable styling** -- Padding, border radius, and four shadow levels (None, Subtle, Medium, Heavy).
+- **High-resolution export** -- Download mockups as 2x or 4x PNG.
+- **Custom color picker** -- Choose any background color (Pro).
+- **Glassmorphism UI** -- Modern frosted-glass design with smooth animations.
+- **License key system** -- One-time Pro upgrade with localStorage persistence and cross-tab sync.
+- **Fully private** -- Zero server uploads. All processing happens in the browser via `html-to-image`.
 
 ---
 
 ## Tech Stack
 
-| Component | Technology |
-|-----------|-----------|
+| Layer | Technology |
+|-------|------------|
 | Framework | Next.js 16 (App Router) |
 | UI | React 19, Tailwind CSS 4 |
-| Export | html-to-image (client-side canvas) |
-| Analytics | Vercel Analytics + Speed Insights |
-| Deploy | Vercel (zero-config) |
+| Export | html-to-image (client-side canvas rendering) |
+| Language | TypeScript 5 |
+| Analytics | Vercel Analytics, Vercel Speed Insights |
+| Deployment | Vercel |
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18 or later
+- npm, yarn, or pnpm
+
+### Installation
+
+```bash
+git clone https://github.com/beepboop2025/snapmock.git
+cd snapmock
+npm install
+```
+
+### Development Server
+
+```bash
+npm run dev
+```
+
+The app starts at `http://localhost:3000`.
+
+### Production Build
+
+```bash
+npm run build
+npm start
+```
+
+---
+
+## Project Structure
+
+```
+src/app/
+  page.tsx                  # Landing page
+  layout.tsx                # Root layout and metadata
+  config.ts                 # Payment and site configuration
+  globals.css               # Global styles
+  hooks/
+    useLicense.ts           # Pro license state management
+  components/
+    MockupEditor.tsx        # Core editor (backgrounds, frames, export)
+    PaymentModal.tsx         # Pro upgrade payment flow
+    PricingSection.tsx       # Free vs Pro comparison
+    FloatingSupport.tsx      # Support widget
+    EmailCapture.tsx         # Email collection form
+```
 
 ---
 
 ## Configuration
 
-Edit `src/app/config.ts` to connect your payment methods:
+Payment methods and site details are configured in `src/app/config.ts`:
 
 ```typescript
 export const CONFIG = {
-  UPI_ID: "yourname@okaxis",
-  PAYPAL_USERNAME: "snapmock",
-  BMAC_USERNAME: "snapmock",
-  CRYPTO_WALLETS: [
-    { network: "Ethereum", address: "0x..." },
-    { network: "Bitcoin", address: "bc1q..." },
-  ],
-  EMAIL_ENDPOINT: "https://formspree.io/f/...",
+  UPI_ID: "",
+  PAYPAL_USERNAME: "",
+  BMAC_USERNAME: "",
+  CRYPTO_WALLETS: [],
+  EMAIL_ENDPOINT: "",
+  SITE_URL: "https://snapmock-orpin.vercel.app",
+  PRODUCT_NAME: "SnapMock",
   PRO_PRICE: "$9",
 };
 ```
 
-**Payments supported:** UPI (Google Pay/PhonePe/Paytm), PayPal, Buy Me a Coffee, Crypto (ETH, BTC, SOL, BNB, Base, Polygon).
+Supported payment methods: UPI, PayPal, Buy Me a Coffee, and crypto (ETH, BTC, SOL, BNB, Base, Polygon).
 
 ---
 
-## Deploy
+## Deployment
+
+Connect the repository to Vercel for automatic deploys on push, or deploy manually:
 
 ```bash
-npm run build
 npx vercel --prod
 ```
 
-Or connect your GitHub repo to Vercel for auto-deploy on push. No environment variables required.
-
----
-
-## Roadmap
-
-- [ ] Mockup templates (tweet card, app store listing, social media post)
-- [ ] Batch processing (upload multiple screenshots)
-- [ ] Custom background image upload
-- [ ] SVG export option
-- [ ] Browser extension for one-click capture + mockup
-
----
-
-## Contributing
-
-The entire app lives in ~6 files under `src/app/`. `MockupEditor.tsx` is the core — backgrounds, frames, and export logic are all there.
+No environment variables are required.
 
 ---
 
 ## License
 
-MIT
+This project is licensed under the [MIT License](LICENSE).
