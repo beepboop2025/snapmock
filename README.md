@@ -1,3 +1,8 @@
+<!-- textura-banner -->
+<div align="center">
+  <a href="https://github.com/beepboop2025/snapmock"><img src="./banner.svg" width="100%" alt="snapmock" /></a>
+</div>
+
 # SnapMock
 
 **Screenshot mockup generator. Upload, frame, export -- all in the browser.**
