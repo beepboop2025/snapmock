@@ -5,6 +5,7 @@ import type { ChangeEvent, DragEvent } from "react";
 import { toPng } from "html-to-image";
 import { track } from "@vercel/analytics";
 import { useLicense } from "../hooks/useLicense";
+import { isDarkColor } from "../lib/color";
 
 const BACKGROUNDS = [
   { name: "Lavender", css: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" },
@@ -148,7 +149,7 @@ export default function MockupEditor() {
   const bg = bgIndex === -1 ? { name: "Custom", css: customColor } : BACKGROUNDS[bgIndex];
   const shadow = SHADOWS[shadowIndex];
   const isDarkBg = bgIndex === -1
-    ? (() => { let c = customColor.replace("#", ""); if (c.length === 3) { c = c[0] + c[0] + c[1] + c[1] + c[2] + c[2]; } const r = parseInt(c.substring(0, 2), 16); const g = parseInt(c.substring(2, 4), 16); const b = parseInt(c.substring(4, 6), 16); return (r * 299 + g * 587 + b * 114) / 1000 < 128; })()
+    ? isDarkColor(customColor)
     : [6, 11].includes(bgIndex);
 
   const renderContent = () => {

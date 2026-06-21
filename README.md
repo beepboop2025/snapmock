@@ -5,6 +5,9 @@
 
 # SnapMock
 
+![tests](https://github.com/beepboop2025/snapmock/actions/workflows/tests.yml/badge.svg)
+![coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
+
 **Screenshot mockup generator. Upload, frame, export -- all in the browser.**
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black.svg)
@@ -117,6 +120,22 @@ export const CONFIG = {
 ```
 
 Supported payment methods: UPI, PayPal, Buy Me a Coffee, and crypto (ETH, BTC, SOL, BNB, Base, Polygon).
+
+---
+
+## Testing
+
+The pure-logic core (payment-link builders, license-key validation, and
+perceived-luminance color math) is unit-tested with [Vitest](https://vitest.dev) —
+no DOM, network, or API keys required, so the suite runs green deterministically in CI.
+
+```bash
+npm test          # run the suite once
+npm run coverage  # run with a coverage report
+```
+
+Coverage of the tested `src/app/lib` modules is 100% (statements, branches, functions, lines).
+CI runs the suite on every push and pull request via `.github/workflows/tests.yml`.
 
 ---
 

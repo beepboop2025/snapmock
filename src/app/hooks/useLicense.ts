@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { isValidLicenseKey, normalizeLicenseKey } from "../lib/license";
 
 const STORAGE_KEY = "snapmock_pro_license";
 const SYNC_EVENT = "snapmock-license-change";
@@ -39,8 +40,8 @@ export function useLicense() {
   }, []);
 
   const activate = useCallback((key: string): boolean => {
-    const trimmed = key.trim();
-    if (trimmed.length >= 8) {
+    if (isValidLicenseKey(key)) {
+      const trimmed = normalizeLicenseKey(key);
       try {
         localStorage.setItem(STORAGE_KEY, trimmed);
       } catch {

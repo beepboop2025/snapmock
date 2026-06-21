@@ -4,6 +4,14 @@ import { useState, useEffect } from "react";
 import { track } from "@vercel/analytics";
 import { useLicense } from "../hooks/useLicense";
 import { CONFIG } from "../config";
+import {
+  buildMethods,
+  buildUpiDeepLink,
+  buildUpiQrUrl,
+  buildPaypalUrl,
+  buildBmacUrl,
+  resolveWallets,
+} from "../lib/payment";
 
 type PaymentMethod = "upi" | "paypal" | "bmac" | "crypto";
 
@@ -36,20 +44,8 @@ export default function PaymentModal({ isOpen, onClose, mode }: PaymentModalProp
 
   if (!isOpen) return null;
 
-  // Determine which payment methods are available
-  const hasCrypto = (CONFIG.CRYPTO_WALLETS && CONFIG.CRYPTO_WALLETS.length > 0) || !!CONFIG.CRYPTO_ADDRESS;
-  const cryptoLabel = CONFIG.CRYPTO_WALLETS?.length > 1
-    ? `Crypto (${CONFIG.CRYPTO_WALLETS.length} networks)`
-    : CONFIG.CRYPTO_WALLETS?.length === 1
-      ? `Crypto (${CONFIG.CRYPTO_WALLETS[0].network})`
-      : CONFIG.CRYPTO_NETWORK ? `Crypto (${CONFIG.CRYPTO_NETWORK})` : "Crypto";
-
-  const methods: { id: PaymentMethod; name: string; icon: string; available: boolean }[] = [
-    { id: "upi", name: "UPI (GPay / PhonePe)", icon: "\uD83D\uDCB3", available: !!CONFIG.UPI_ID },
-    { id: "paypal", name: "PayPal", icon: "\uD83C\uDD7F\uFE0F", available: !!CONFIG.PAYPAL_USERNAME },
-    { id: "bmac", name: "Buy Me a Coffee", icon: "\u2615", available: !!CONFIG.BMAC_USERNAME },
-    { id: "crypto", name: cryptoLabel, icon: "\uD83E\uDE99", available: hasCrypto },
-  ];
+  // Determine which payment methods are available (pure logic in lib/payment)
+  const methods = buildMethods(CONFIG);
 
   const availableMethods = methods.filter((m) => m.available);
   const hasAnyMethod = availableMethods.length > 0;
@@ -57,13 +53,9 @@ export default function PaymentModal({ isOpen, onClose, mode }: PaymentModalProp
   const amount = mode === "pro" ? CONFIG.PRO_PRICE : "any amount";
   const amountINR = mode === "pro" && CONFIG.PRO_PRICE_INR ? `\u20B9${CONFIG.PRO_PRICE_INR}` : null;
 
-  const upiDeepLink = CONFIG.UPI_ID
-    ? `upi://pay?pa=${encodeURIComponent(CONFIG.UPI_ID)}&pn=${encodeURIComponent(CONFIG.UPI_NAME || CONFIG.PRODUCT_NAME)}${mode === "pro" ? `&am=${CONFIG.PRO_PRICE_INR || "749"}&cu=INR` : "&cu=INR"}&tn=${encodeURIComponent(mode === "pro" ? "SnapMock Pro License" : "Support SnapMock")}`
-    : "";
+  const upiDeepLink = buildUpiDeepLink(CONFIG, mode);
 
-  const upiQrUrl = upiDeepLink
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiDeepLink)}`
-    : "";
+  const upiQrUrl = buildUpiQrUrl(upiDeepLink);
 
   const handleCopy = async (text: string) => {
     try {
@@ -142,7 +134,7 @@ export default function PaymentModal({ isOpen, onClose, mode }: PaymentModalProp
           <div className="space-y-4 fade-slide-in">
             <p className="text-sm text-white/40 text-center">Click below to open PayPal and send {amount}</p>
             <a
-              href={`https://paypal.me/${CONFIG.PAYPAL_USERNAME}${mode === "pro" ? "/9" : ""}`}
+              href={buildPaypalUrl(CONFIG.PAYPAL_USERNAME, mode)}
               target="_blank"
               rel="noopener noreferrer"
               className="block w-full text-center py-3 bg-[#0070BA] hover:bg-[#005C9A] text-white font-semibold rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-[#0070BA]/20 hover:scale-[1.01] active:scale-[0.99]"
@@ -158,7 +150,7 @@ export default function PaymentModal({ isOpen, onClose, mode }: PaymentModalProp
           <div className="space-y-4 fade-slide-in">
             <p className="text-sm text-white/40 text-center">Support via Buy Me a Coffee</p>
             <a
-              href={`https://buymeacoffee.com/${CONFIG.BMAC_USERNAME}`}
+              href={buildBmacUrl(CONFIG.BMAC_USERNAME)}
               target="_blank"
               rel="noopener noreferrer"
               className="block w-full text-center py-3 bg-[#FFDD00] hover:bg-[#FFD000] text-gray-900 font-semibold rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-[#FFDD00]/20 hover:scale-[1.01] active:scale-[0.99]"
@@ -170,11 +162,7 @@ export default function PaymentModal({ isOpen, onClose, mode }: PaymentModalProp
         );
 
       case "crypto": {
-        const wallets = CONFIG.CRYPTO_WALLETS?.length
-          ? CONFIG.CRYPTO_WALLETS
-          : CONFIG.CRYPTO_ADDRESS
-            ? [{ network: CONFIG.CRYPTO_NETWORK || "Crypto", address: CONFIG.CRYPTO_ADDRESS, icon: "\uD83E\uDE99" }]
-            : [];
+        const wallets = resolveWallets(CONFIG);
         const activeWallet = wallets[selectedWalletIndex] || wallets[0];
         if (!activeWallet) return null;
 
