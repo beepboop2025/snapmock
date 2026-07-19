@@ -13,7 +13,7 @@ export const CONFIG = {
   // UPI (India) — Zero setup! You already have this via Google Pay/PhonePe/Paytm
   // Find your UPI ID in your UPI app → Profile → UPI ID
   UPI_ID: "", // e.g. "yourname@okaxis", "9876543210@ybl", "yourname@paytm"
-  UPI_NAME: "", // e.g. "Mrinal" — your display name for UPI payments
+  UPI_NAME: "", // your display name for UPI payments
 
   // PayPal — Create free account at paypal.me, share the link
   PAYPAL_USERNAME: "", // e.g. "snapmock" → becomes paypal.me/snapmock

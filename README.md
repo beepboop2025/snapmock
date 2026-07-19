@@ -10,7 +10,6 @@
 ![Next.js](https://img.shields.io/badge/Next.js-16-black.svg)
 ![React](https://img.shields.io/badge/React-19-blue.svg)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38bdf8.svg)
-![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 
 ---
 
@@ -134,4 +133,4 @@ No environment variables are required.
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This repository does not currently include an open-source license. All rights reserved.
